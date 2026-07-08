@@ -1,0 +1,23 @@
+# Maven build outputs
+target/
+*.war
+*.ear
+*.jar
+
+# SQLite database file
+*.db
+
+# IDE specific files
+.idea/
+*.iml
+.settings/
+.project
+.classpath
+.metadata/
+*.tmp
+*.bak
+
+# OS specific files
+Thumbs.db
+desktop.ini
+.DS_Store

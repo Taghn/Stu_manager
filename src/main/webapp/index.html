@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Manager - Quản lý Sinh viên Premium</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <h1>STUDENT<span>DHV</span></h1>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" id="tab-form-btn" data-target="tab-form">
+          <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="16" y1="11" x2="22" y2="11"/>
+          </svg>
+          Nhập thông tin
+        </button>
+        <button class="nav-tab" id="tab-list-btn" data-target="tab-list">
+          <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Danh sách sinh viên
+          <span class="badge" id="student-count">0</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+      <!-- Section: Input Form -->
+      <section class="tab-pane active" id="tab-form">
+        <div class="pane-header">
+          <h2>Nhập Thông Tin Sinh Viên</h2>
+          <p>Điền đầy đủ thông tin phía dưới để thêm sinh viên mới vào hệ thống.</p>
+        </div>
+        
+        <form id="student-form" novalidate>
+          <div class="form-grid">
+            <!-- Full Name -->
+            <div class="input-group">
+              <label for="fullName">Họ và tên</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input type="text" id="fullName" placeholder="Ví dụ: Nguyễn Văn A" required>
+              </div>
+              <span class="error-msg" id="fullName-error">Vui lòng nhập họ và tên hợp lệ</span>
+            </div>
+
+            <!-- Student ID (MSSV) -->
+            <div class="input-group">
+              <label for="studentId">Mã số sinh viên (MSSV)</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
+                  <line x1="7" y1="8" x2="17" y2="8"/>
+                  <line x1="7" y1="12" x2="17" y2="12"/>
+                  <line x1="7" y1="16" x2="13" y2="16"/>
+                </svg>
+                <input type="text" id="studentId" placeholder="Ví dụ: 2305CT0000" required>
+              </div>
+              <span class="error-msg" id="studentId-error">MSSV phải có độ dài từ 4-15 ký tự (chữ và số)</span>
+            </div>
+
+            <!-- Class -->
+            <div class="input-group">
+              <label for="className">Lớp</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <input type="text" id="className" placeholder="Ví dụ: CT07PM" required>
+              </div>
+              <span class="error-msg" id="className-error">Vui lòng nhập tên lớp (ví dụ: D20CQCN01-B)</span>
+            </div>
+
+            <!-- Email -->
+            <div class="input-group">
+              <label for="email">Email</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input type="email" id="email" placeholder="Ví dụ: sv@gmail.com (Không bắt buộc)">
+              </div>
+              <span class="error-msg" id="email-error">Vui lòng nhập địa chỉ email hợp lệ</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>Thêm sinh viên</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Section: Student List -->
+      <section class="tab-pane" id="tab-list">
+        <div class="pane-header-flex">
+          <div class="pane-header">
+            <h2>Quản Lý Danh Sách Sinh Viên</h2>
+            <p>Danh sách học sinh đã nhập thông tin. Bạn có thể tìm kiếm, sửa đổi hoặc xóa.</p>
+          </div>
+          <!-- Search Box -->
+          <div class="search-box">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="Tìm kiếm theo Tên hoặc MSSV...">
+          </div>
+        </div>
+
+        <!-- Student Data Display -->
+        <div class="table-container">
+          <table class="student-table" id="student-table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>MSSV</th>
+                <th>Họ và tên</th>
+                <th>Lớp</th>
+                <th>Email</th>
+                <th class="actions-header">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="student-tbody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+          <!-- Empty State -->
+          <div class="empty-state" id="empty-state">
+            <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <h3>Chưa có sinh viên nào</h3>
+            <p>Danh sách trống. Hãy thêm sinh viên mới ở tab "Nhập thông tin".</p>
+            <button class="btn btn-primary" id="empty-add-btn">
+              <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Thêm sinh viên ngay
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Edit Student -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Chỉnh sửa thông tin sinh viên</h3>
+        <button class="modal-close" id="close-modal-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="edit-form" novalidate>
+        <!-- Keep track of the current editing index/id -->
+        <input type="hidden" id="edit-index">
+        <input type="hidden" id="edit-original-studentId">
+        
+        <div class="form-grid modal-grid">
+          <!-- Full Name -->
+          <div class="input-group">
+            <label for="edit-fullName">Họ và tên</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input type="text" id="edit-fullName" required>
+            </div>
+            <span class="error-msg" id="edit-fullName-error">Vui lòng nhập họ và tên hợp lệ</span>
+          </div>
+
+          <!-- Student ID (MSSV) -->
+          <div class="input-group">
+            <label for="edit-studentId">MSSV</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
+                <line x1="7" y1="8" x2="17" y2="8"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+                <line x1="7" y1="16" x2="13" y2="16"/>
+              </svg>
+              <input type="text" id="edit-studentId" required>
+            </div>
+            <span class="error-msg" id="edit-studentId-error">MSSV phải từ 4-15 ký tự (chữ và số)</span>
+          </div>
+
+          <!-- Class -->
+          <div class="input-group">
+            <label for="edit-className">Lớp</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <input type="text" id="edit-className" required>
+            </div>
+            <span class="error-msg" id="edit-className-error">Vui lòng nhập tên lớp</span>
+          </div>
+
+          <!-- Email -->
+          <div class="input-group">
+            <label for="edit-email">Email</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input type="email" id="edit-email" placeholder="Ví dụ: sv@gmail.com (Không bắt buộc)">
+            </div>
+            <span class="error-msg" id="edit-email-error">Vui lòng nhập email hợp lệ</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancel-edit-btn">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary" id="save-edit-btn">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
