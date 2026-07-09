@@ -607,3 +607,49 @@ body {
   font-weight: 500;
   color: var(--text-primary);
 }
+
+/* --- Login Styles --- */
+.login-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-base);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  padding: 35px;
+  width: 90%;
+  max-width: 420px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.login-header h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.hidden {
+  display: none !important;
+}

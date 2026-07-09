@@ -9,6 +9,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,6 +21,18 @@ import java.util.Map;
 public class StudentServlet extends HttpServlet {
     private final StudentDAO studentDAO = new StudentDAO();
     private final Gson gson = new Gson();
+
+    // Helper to verify session login status
+    private boolean checkSession(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "Vui lòng đăng nhập hệ thống trước!");
+            sendJsonResponse(response, HttpServletResponse.SC_UNAUTHORIZED, err);
+            return false;
+        }
+        return true;
+    }
 
     // Helper to send JSON responses
     private void sendJsonResponse(HttpServletResponse response, int status, Object data) throws IOException {
@@ -50,6 +63,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        if (!checkSession(request, response)) return;
         List<Student> list = studentDAO.getAllStudents();
         sendJsonResponse(response, HttpServletResponse.SC_OK, list);
     }
@@ -58,6 +72,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        if (!checkSession(request, response)) return;
         try {
             Student student = readJsonBody(request, Student.class);
             
@@ -98,6 +113,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        if (!checkSession(request, response)) return;
         try {
             Student student = readJsonBody(request, Student.class);
             
@@ -138,6 +154,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        if (!checkSession(request, response)) return;
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.trim().isEmpty()) {
             Map<String, String> err = new HashMap<>();

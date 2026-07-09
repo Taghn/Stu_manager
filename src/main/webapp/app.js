@@ -5,7 +5,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- DOM Elements ---
-  const tabButtons = document.querySelectorAll('.nav-tab');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const studentForm = document.getElementById('student-form');
   const studentTable = document.getElementById('student-table');
@@ -15,7 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-input');
   
   // Navigation shortcuts
-  const emptyAddBtn = document.getElementById('empty-add-btn');
+  const addStudentBtn = document.getElementById('add-student-btn');
+  const backToListBtn = document.getElementById('back-to-list-btn');
+  const cancelAddBtn = document.getElementById('cancel-add-btn');
+
+  // Authentication Elements
+  const loginContainer = document.getElementById('login-container');
+  const appContainer = document.getElementById('app-container');
+  const loginForm = document.getElementById('login-form');
+  const loginUsername = document.getElementById('login-username');
+  const loginPassword = document.getElementById('login-password');
+  const logoutBtn = document.getElementById('logout-btn');
+  const loggedUsername = document.getElementById('logged-username');
 
   // Edit Modal Elements
   const editModal = document.getElementById('edit-modal');
@@ -74,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- State ---
   let students = [];
   const API_URL = 'api/students';
+  const AUTH_URL = 'api/auth';
 
   // --- Helper Functions ---
 
@@ -81,6 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const fetchStudents = async () => {
     try {
       const response = await fetch(API_URL);
+      if (response.status === 401) {
+        showLogin();
+        return;
+      }
       if (!response.ok) {
         throw new Error('Không thể lấy danh sách sinh viên từ server.');
       }
@@ -92,17 +107,38 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Lỗi kết nối đến máy chủ: ' + err.message, 'error');
     }
   };
+
+  // --- Authentication Helpers ---
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch(AUTH_URL);
+      const result = await response.json();
+      if (response.ok && result.loggedIn) {
+        showApp(result.username);
+      } else {
+        showLogin();
+      }
+    } catch (err) {
+      console.error(err);
+      showLogin();
+    }
+  };
+
+  const showApp = (username) => {
+    loginContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    loggedUsername.textContent = username;
+    switchTab('tab-list');
+  };
+
+  const showLogin = () => {
+    appContainer.classList.add('hidden');
+    loginContainer.classList.remove('hidden');
+    loginForm.reset();
+  };
   
   // Switch tabs
   const switchTab = (targetTabId) => {
-    tabButtons.forEach(btn => {
-      if (btn.getAttribute('data-target') === targetTabId) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
-    });
-
     tabPanes.forEach(pane => {
       if (pane.id === targetTabId) {
         pane.classList.add('active');
@@ -146,13 +182,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.appendChild(toast);
 
-    // Auto fadeout and delete toast
+    // Auto fadeout and delete toast (lasts 2.5 seconds)
     setTimeout(() => {
       toast.classList.add('fade-out');
-      toast.addEventListener('animationend', () => {
+      setTimeout(() => {
         toast.remove();
-      });
-    }, 3200);
+      }, 250); // wait for 0.25s opacity transition
+    }, 2500);
   };
 
   // Validate individual input group
@@ -271,6 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(newStudent)
       });
 
+      if (response.status === 401) {
+        showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+        showLogin();
+        return;
+      }
+
       const result = await response.json();
 
       if (response.ok) {
@@ -319,6 +361,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(`${API_URL}?id=${id}`, {
           method: 'DELETE'
         });
+
+        if (response.status === 401) {
+          showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+          showLogin();
+          return;
+        }
 
         const result = await response.json();
 
@@ -398,6 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(updatedStudent)
       });
 
+      if (response.status === 401) {
+        showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+        showLogin();
+        return;
+      }
+
       const result = await response.json();
 
       if (response.ok) {
@@ -419,15 +473,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Event Listeners ---
 
   // Tab switching clicks
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-target');
-      switchTab(target);
-    });
-  });
-
-  // Tab shortcut buttons
-  emptyAddBtn.addEventListener('click', () => switchTab('tab-form'));
+  // Navigation button clicks
+  addStudentBtn.addEventListener('click', () => switchTab('tab-form'));
+  backToListBtn.addEventListener('click', () => switchTab('tab-list'));
+  cancelAddBtn.addEventListener('click', () => switchTab('tab-list'));
 
   // Search input typing
   searchInput.addEventListener('input', (e) => {
@@ -467,7 +516,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle login submit
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = loginUsername.value.trim();
+    const password = loginPassword.value;
+
+    if (!username || !password) {
+      showToast('Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showToast('Đăng nhập hệ thống thành công!');
+        showApp(result.username);
+      } else {
+        showToast(result.error || 'Đăng nhập thất bại. Vui lòng kiểm tra lại!', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Không thể kết nối đến máy chủ để xác thực.', 'error');
+    }
+  });
+
+  // Handle logout button click
+  logoutBtn.addEventListener('click', async () => {
+    if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
+      try {
+        const response = await fetch(AUTH_URL, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          showToast('Đăng xuất thành công.', 'info');
+          showLogin();
+        } else {
+          showToast('Có lỗi xảy ra khi đăng xuất.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Không thể kết nối đến máy chủ để đăng xuất.', 'error');
+      }
+    }
+  });
+
   // --- Initial Setup ---
-  // Initial fetch from Java Servlet API
-  fetchStudents();
+  // Check auth status
+  checkAuthStatus();
 });
