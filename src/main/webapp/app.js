@@ -5,7 +5,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // --- DOM Elements ---
-  const tabPanes = document.querySelectorAll('.tab-pane');
   const studentForm = document.getElementById('student-form');
   const studentTable = document.getElementById('student-table');
   const studentTbody = document.getElementById('student-tbody');
@@ -14,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-input');
   
   // Navigation shortcuts
-  const addStudentBtn = document.getElementById('add-student-btn');
-  const backToListBtn = document.getElementById('back-to-list-btn');
   const cancelAddBtn = document.getElementById('cancel-add-btn');
 
   // Authentication Elements
@@ -51,10 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
       error: document.getElementById('className-error'),
       validate: (val) => val.trim().length >= 2
     },
-    email: {
-      input: document.getElementById('email'),
-      error: document.getElementById('email-error'),
-      validate: (val) => val.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())
+    subject: {
+      input: document.getElementById('subject'),
+      error: document.getElementById('subject-error'),
+      validate: (val) => val.trim().length >= 2
+    },
+    tuitionFee: {
+      input: document.getElementById('tuitionFee'),
+      error: document.getElementById('tuitionFee-error'),
+      validate: (val) => val.trim() !== "" && !isNaN(val) && parseFloat(val) >= 0
     }
   };
 
@@ -74,10 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
       error: document.getElementById('edit-className-error'),
       validate: (val) => val.trim().length >= 2
     },
-    email: {
-      input: document.getElementById('edit-email'),
-      error: document.getElementById('edit-email-error'),
-      validate: (val) => val.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())
+    subject: {
+      input: document.getElementById('edit-subject'),
+      error: document.getElementById('edit-subject-error'),
+      validate: (val) => val.trim().length >= 2
+    },
+    tuitionFee: {
+      input: document.getElementById('edit-tuitionFee'),
+      error: document.getElementById('edit-tuitionFee-error'),
+      validate: (val) => val.trim() !== "" && !isNaN(val) && parseFloat(val) >= 0
     }
   };
 
@@ -137,21 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.reset();
   };
   
-  // Switch tabs
+  // Switch tabs (adapted for two-column layout)
   const switchTab = (targetTabId) => {
-    tabPanes.forEach(pane => {
-      if (pane.id === targetTabId) {
-        pane.classList.add('active');
-      } else {
-        pane.classList.remove('active');
-      }
-    });
-
-    // If switching to list, refresh and focus search
-    if (targetTabId === 'tab-list') {
-      fetchStudents();
-      setTimeout(() => searchInput.focus(), 150);
-    }
+    fetchStudents();
+    setTimeout(() => {
+      if (searchInput) searchInput.focus();
+    }, 150);
   };
 
   // Show customized floating toast alerts
@@ -236,12 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered.forEach((student, index) => {
       const tr = document.createElement('tr');
       tr.className = 'fade-in-row';
+      const formattedFee = student.tuitionFee !== undefined && student.tuitionFee !== null
+        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(student.tuitionFee)
+        : '0 ₫';
       tr.innerHTML = `
         <td>${index + 1}</td>
         <td><strong>${escapeHTML(student.studentId)}</strong></td>
         <td>${escapeHTML(student.fullName)}</td>
         <td>${escapeHTML(student.className)}</td>
-        <td>${escapeHTML(student.email)}</td>
+        <td>${escapeHTML(student.subject)}</td>
+        <td><strong>${formattedFee}</strong></td>
         <td>
           <div class="actions-cell">
             <button class="action-btn edit" data-id="${student.id}" title="Sửa thông tin">
@@ -295,7 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fullName: formFields.fullName.input.value.trim(),
       studentId: formFields.studentId.input.value.trim().toUpperCase(),
       className: formFields.className.input.value.trim(),
-      email: formFields.email.input.value.trim()
+      subject: formFields.subject.input.value.trim(),
+      tuitionFee: parseFloat(formFields.tuitionFee.input.value)
     };
 
     try {
@@ -371,14 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
 
         if (response.ok) {
-          rowElement.classList.remove('fade-in-row');
-          rowElement.classList.add('fade-out-row');
-          
-          // Wait for fadeout animation to finish
-          rowElement.addEventListener('animationend', () => {
-            fetchStudents(); // Refresh database state
-            showToast(`Đã xóa sinh viên ${student.fullName} thành công.`, 'info');
-          });
+          showToast(`Đã xóa sinh viên ${student.fullName} thành công.`, 'success');
+          fetchStudents(); // Refresh database state immediately
         } else {
           showToast(result.error || 'Không thể xóa sinh viên.', 'error');
         }
@@ -400,7 +397,8 @@ document.addEventListener('DOMContentLoaded', () => {
     editFields.fullName.input.value = student.fullName;
     editFields.studentId.input.value = student.studentId;
     editFields.className.input.value = student.className;
-    editFields.email.input.value = student.email;
+    editFields.subject.input.value = student.subject || '';
+    editFields.tuitionFee.input.value = student.tuitionFee !== undefined && student.tuitionFee !== null ? student.tuitionFee : '';
 
     clearValidation(editFields);
     editModal.classList.add('open');
@@ -434,7 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fullName: editFields.fullName.input.value.trim(),
       studentId: editFields.studentId.input.value.trim().toUpperCase(),
       className: editFields.className.input.value.trim(),
-      email: editFields.email.input.value.trim()
+      subject: editFields.subject.input.value.trim(),
+      tuitionFee: parseFloat(editFields.tuitionFee.input.value)
     };
 
     try {
@@ -472,16 +471,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Event Listeners ---
 
-  // Tab switching clicks
   // Navigation button clicks
-  addStudentBtn.addEventListener('click', () => switchTab('tab-form'));
-  backToListBtn.addEventListener('click', () => switchTab('tab-list'));
-  cancelAddBtn.addEventListener('click', () => switchTab('tab-list'));
+  if (cancelAddBtn) {
+    cancelAddBtn.addEventListener('click', () => {
+      studentForm.reset();
+      clearValidation(formFields);
+    });
+  }
 
   // Search input typing
-  searchInput.addEventListener('input', (e) => {
-    renderStudents(e.target.value);
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      renderStudents(e.target.value);
+    });
+  }
 
   // Real-time Input validation listeners (blur event)
   Object.values(formFields).forEach(field => {

@@ -83,10 +83,26 @@ public class StudentServlet extends HttpServlet {
                 return;
             }
 
-            // Check duplicate MSSV
-            if (studentDAO.isStudentIdExists(student.getStudentId(), null)) {
+            // Check duplicate MSSV + subject
+            if (studentDAO.isStudentSubjectExists(student.getStudentId(), student.getSubject(), null)) {
                 Map<String, String> err = new HashMap<>();
-                err.put("error", "Mã số sinh viên (MSSV) này đã tồn tại trong hệ thống!");
+                err.put("error", "Sinh viên có MSSV này đã đăng ký môn học này rồi!");
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
+                return;
+            }
+
+            // Check if studentId is used by another student (different name/class)
+            if (studentDAO.isStudentIdMismatch(student.getStudentId(), student.getFullName(), student.getClassName(), null)) {
+                Map<String, String> err = new HashMap<>();
+                err.put("error", "Mã số sinh viên (MSSV) này đã được đăng ký cho sinh viên khác!");
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
+                return;
+            }
+
+            // Check if this student (name/class) is registered under another studentId
+            if (studentDAO.isStudentIdentityMismatch(student.getStudentId(), student.getFullName(), student.getClassName(), null)) {
+                Map<String, String> err = new HashMap<>();
+                err.put("error", "Sinh viên này đã có mã số sinh viên (MSSV) khác trong hệ thống!");
                 sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
                 return;
             }
@@ -124,10 +140,26 @@ public class StudentServlet extends HttpServlet {
                 return;
             }
 
-            // Check duplicate MSSV excluding current student
-            if (studentDAO.isStudentIdExists(student.getStudentId(), student.getId())) {
+            // Check duplicate MSSV + subject excluding current student
+            if (studentDAO.isStudentSubjectExists(student.getStudentId(), student.getSubject(), student.getId())) {
                 Map<String, String> err = new HashMap<>();
-                err.put("error", "Mã số sinh viên (MSSV) này đã được sử dụng bởi sinh viên khác!");
+                err.put("error", "Mã số sinh viên (MSSV) và Môn học này đã được đăng ký bởi bản ghi khác!");
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
+                return;
+            }
+
+            // Check if studentId is used by another student (different name/class) excluding current student
+            if (studentDAO.isStudentIdMismatch(student.getStudentId(), student.getFullName(), student.getClassName(), student.getId())) {
+                Map<String, String> err = new HashMap<>();
+                err.put("error", "Mã số sinh viên (MSSV) này đã được đăng ký cho sinh viên khác!");
+                sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
+                return;
+            }
+
+            // Check if this student (name/class) is registered under another studentId excluding current student
+            if (studentDAO.isStudentIdentityMismatch(student.getStudentId(), student.getFullName(), student.getClassName(), student.getId())) {
+                Map<String, String> err = new HashMap<>();
+                err.put("error", "Sinh viên này đã có mã số sinh viên (MSSV) khác trong hệ thống!");
                 sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST, err);
                 return;
             }

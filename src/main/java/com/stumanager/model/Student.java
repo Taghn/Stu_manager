@@ -5,24 +5,27 @@ public class Student {
     private String studentId; // MSSV
     private String fullName;
     private String className;
-    private String email;
+    private String subject;
+    private Double tuitionFee;
 
     public Student() {
     }
 
-    public Student(String studentId, String fullName, String className, String email) {
+    public Student(String studentId, String fullName, String className, String subject, Double tuitionFee) {
         this.studentId = studentId;
         this.fullName = fullName;
         this.className = className;
-        this.email = email;
+        this.subject = subject;
+        this.tuitionFee = tuitionFee;
     }
 
-    public Student(int id, String studentId, String fullName, String className, String email) {
+    public Student(int id, String studentId, String fullName, String className, String subject, Double tuitionFee) {
         this.id = id;
         this.studentId = studentId;
         this.fullName = fullName;
         this.className = className;
-        this.email = email;
+        this.subject = subject;
+        this.tuitionFee = tuitionFee;
     }
 
     public int getId() {
@@ -57,11 +60,19 @@ public class Student {
         this.className = className;
     }
 
-    public String getEmail() {
-        return email;
+    public String getSubject() {
+        return subject;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public Double getTuitionFee() {
+        return tuitionFee;
+    }
+
+    public void setTuitionFee(Double tuitionFee) {
+        this.tuitionFee = tuitionFee;
     }
 }

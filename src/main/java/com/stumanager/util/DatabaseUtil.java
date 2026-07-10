@@ -45,10 +45,12 @@ public class DatabaseUtil {
     private static void initializeDatabase() {
         String createStudentsTableSQL = "CREATE TABLE IF NOT EXISTS students (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                "student_id VARCHAR(50) NOT NULL UNIQUE, " +
+                "student_id VARCHAR(50) NOT NULL, " +
                 "full_name VARCHAR(100) NOT NULL, " +
                 "class_name VARCHAR(50) NOT NULL, " +
-                "email VARCHAR(100) NOT NULL" +
+                "subject VARCHAR(100) NULL, " +
+                "tuition_fee DOUBLE DEFAULT 0.0, " +
+                "UNIQUE KEY unique_student_subject (student_id, subject)" +
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
         String createUsersTableSQL = "CREATE TABLE IF NOT EXISTS users (" +
@@ -63,6 +65,66 @@ public class DatabaseUtil {
             // Create tables
             stmt.execute(createStudentsTableSQL);
             stmt.execute(createUsersTableSQL);
+
+            // Dynamically alter students table to add new columns if they do not exist
+            java.sql.DatabaseMetaData metaData = conn.getMetaData();
+            
+            // Check 'subject' column
+            try (java.sql.ResultSet rs = metaData.getColumns(null, null, "students", "subject")) {
+                if (!rs.next()) {
+                    stmt.execute("ALTER TABLE students ADD COLUMN subject VARCHAR(100) NULL;");
+                    System.out.println("Column 'subject' added to 'students' table.");
+                }
+            }
+
+            // Check 'tuition_fee' column
+            try (java.sql.ResultSet rs = metaData.getColumns(null, null, "students", "tuition_fee")) {
+                if (!rs.next()) {
+                    stmt.execute("ALTER TABLE students ADD COLUMN tuition_fee DOUBLE DEFAULT 0.0;");
+                    System.out.println("Column 'tuition_fee' added to 'students' table.");
+                }
+            }
+
+            // Drop 'email' column if it exists in the 'students' table to prevent INSERT failures
+            try (java.sql.ResultSet rs = metaData.getColumns(null, null, "students", "email")) {
+                if (rs.next()) {
+                    stmt.execute("ALTER TABLE students DROP COLUMN email;");
+                    System.out.println("Column 'email' dropped from 'students' table successfully.");
+                }
+            }
+
+            // Update UNIQUE constraint: drop student_id single unique index and add composite unique index
+            boolean hasStudentIdUnique = false;
+            boolean hasCompositeUnique = false;
+            try (java.sql.ResultSet rs = metaData.getIndexInfo(null, null, "students", false, false)) {
+                while (rs.next()) {
+                    String indexName = rs.getString("INDEX_NAME");
+                    if ("student_id".equalsIgnoreCase(indexName)) {
+                        hasStudentIdUnique = true;
+                    }
+                    if ("unique_student_subject".equalsIgnoreCase(indexName)) {
+                        hasCompositeUnique = true;
+                    }
+                }
+            }
+
+            if (hasStudentIdUnique) {
+                try {
+                    stmt.execute("ALTER TABLE students DROP INDEX student_id;");
+                    System.out.println("Dropped single UNIQUE index on student_id.");
+                } catch (SQLException e) {
+                    System.err.println("Warning: failed to drop index student_id: " + e.getMessage());
+                }
+            }
+
+            if (!hasCompositeUnique) {
+                try {
+                    stmt.execute("ALTER TABLE students ADD UNIQUE KEY unique_student_subject (student_id, subject);");
+                    System.out.println("Added composite UNIQUE key (student_id, subject) to students table.");
+                } catch (SQLException e) {
+                    System.err.println("Warning: failed to add composite unique key: " + e.getMessage());
+                }
+            }
             
             // Seed default admin user if users table is empty
             String checkUsersSQL = "SELECT COUNT(*) FROM users;";
@@ -72,6 +134,22 @@ public class DatabaseUtil {
                     String seedUserSQL = "INSERT INTO users (username, password) VALUES ('admin', '" + adminHash + "');";
                     stmt.execute(seedUserSQL);
                     System.out.println("Default admin user seeded successfully in MySQL.");
+                }
+            }
+
+            // Seed default student data if students table is empty
+            String checkStudentsSQL = "SELECT COUNT(*) FROM students;";
+            try (java.sql.ResultSet rs = stmt.executeQuery(checkStudentsSQL)) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    String seedStudentsSQL = "INSERT INTO students (student_id, full_name, class_name, subject, tuition_fee) VALUES " +
+                            "('2305CT0001', 'Nguyễn Văn A', 'CT07PM', 'Lập trình Java', 3500000.0), " +
+                            "('2305CT0001', 'Nguyễn Văn A', 'CT07PM', 'Cơ sở dữ liệu', 4000000.0), " +
+                            "('2305CT0002', 'Trần Thị B', 'CT07PM', 'Cơ sở dữ liệu', 4000000.0), " +
+                            "('2305CT0003', 'Lê Hoàng C', 'CT08PM', 'Phân tích thiết kế hệ thống', 3800000.0), " +
+                            "('2305CT0004', 'Phạm Minh D', 'CT07PM', 'Lập trình Web nâng cao', 4500000.0), " +
+                            "('2305CT0005', 'Vũ Hoài E', 'CT08PM', 'An toàn thông tin', 3600000.0);";
+                    stmt.execute(seedStudentsSQL);
+                    System.out.println("Default students seeded successfully in MySQL.");
                 }
             }
             
